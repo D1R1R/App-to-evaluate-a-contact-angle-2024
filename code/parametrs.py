@@ -1,1 +1,1 @@
-PATH_TO_UI = r"D:\MLProject2024\PROJECT\ui\window.ui"
+PATH_TO_UI = r"...\ui\window.ui"  # Write the full path
