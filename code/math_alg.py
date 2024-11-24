@@ -43,10 +43,3 @@ class EvaluatingAlg():
         alpha = atan(k) * 180 / pi  
         x = alpha + 90  # искомый угол перпендикулярен радиусу  
         return x
-    
-
-
-# TEST
-path = r"D:\MLProject2024\dataset\data\mask\22.png"
-eva = EvaluatingAlg(path)
-print(eva.calc())
