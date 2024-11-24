@@ -4,12 +4,11 @@ from PIL import Image
 import numpy as np 
 
 
-
 class EvaluatingAlg():
-    def __init__(self, path: str):
+    def __init__(self, path: str) -> None:
         # Чтение изображения в черно-белом формате 
         self.img = Image.open(path).convert('L')
-    def calc(self):
+    def calc(self) -> None:
         # Преобразуем изображение в массив NumPy  
         img_array = np.array(self.img)
         # Нахождение индексов первого и последнего нечерного пикселя по горизонтали и вертикали  
