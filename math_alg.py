@@ -58,4 +58,4 @@ class EvaluatingAlg():
         x = alpha + 90  # искомый угол перпендикулярен радиусу
 
         rect = ((top_point, bottom_point), (left_point, right_point))
-        return x, rect
+        return x, rect #!
