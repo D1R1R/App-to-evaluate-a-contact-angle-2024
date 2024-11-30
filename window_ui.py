@@ -2,6 +2,7 @@ import os
 from PyQt6 import QtWidgets, QtCore, QtGui, uic
 import pandas as pd
 from parametrs import *
+from dialogs import *
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -10,23 +11,25 @@ class MainWindow(QtWidgets.QMainWindow):
         # Импортируем ui
         uic.loadUi(PATH_TO_UI, self)  # Или преобразуем ui в py с помощью pyuic6
         # ПАРАМЕТРЫ
-        self.uploaded_state = None  # True - ; False - ; None -
+        self.uploaded_state = None  # True - файл; False - папка; None - ничего
         self.import_way = None
 
         self.show_angel = True
         self.show_data = True
         self.show_square = True
         self.show_circle = True
+        self.angel_type = None
         self.beam_length = 20
-        self.beam_width = 2
+        self.lines_width = 2
 
         self.text_file = False
-        self.export_type = None  # TODO
+        self.export_type = None
         home_dir = os.path.expanduser('~')  # ??? работает только на Windows
         self.export_way = os.path.join(home_dir, "Downloads")
 
         self._table_model = None
         self.table = None
+        self.flag_settings_changes = False
 
         # QBUTTON
         for button in self.centralwidget.findChildren(QtWidgets.QAbstractButton):  # Всем кнопкам в поле centralwidget устанавливаем NoFocus
@@ -39,7 +42,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.history_button.setFocus()
         # 2. Расширенные настройки
         self.folder_btn.pressed.connect(lambda: self.open_folder())
-        self.apply_btn.pressed.connect(lambda: self.apply_settings())
+        self.apply_btn.pressed.connect(lambda: self.apply_settings())  # QCOMDOBOX; QSPINBOX; QCHECKBOX     
         # 2.1 Отображение текущей папки QLABEL
         self.current_folder_lb.setText(f'Текущее место сохранения: {self.export_way}')
         # 3. История решений
@@ -54,9 +57,17 @@ class MainWindow(QtWidgets.QMainWindow):
     
     def open_frame(self, f: bool) -> None:
         if f:
-            self.Settings_frame.setMaximumSize(0, 16777215)
-            self.History_frame.setMaximumSize(16777215, 16777215)
+            answer = False
+            if self.flag_settings_changes:
+                # Предупредить пользователя что изменения не сохранены
+                answer = RaiseSettingNotSavedMessage(self)
+            if not answer:
+                self.Settings_frame.setMaximumSize(0, 16777215)
+                self.History_frame.setMaximumSize(16777215, 16777215)
+            else:
+                self.settings_button.setFocus()
         else:
+            self.flag_settings_changes = True
             self.Settings_frame.setMaximumSize(16777215, 16777215)
             self.History_frame.setMaximumSize(0, 16777215)
 
@@ -65,7 +76,44 @@ class MainWindow(QtWidgets.QMainWindow):
         self.current_folder_lb.setText(f'Текущее место сохранения: {self.export_way}')
 
     def apply_settings(self) -> None:
-        pass
+        # TODO: ENABLED\DISABLED
+        # QCHECKBOX
+        if self.datashow_cb.isChecked():
+            self.show_data = True
+        else:
+            self.show_data = False
+
+        if self.sqareshow_cb.isChecked():
+            self.show_square = True
+        else:
+            self.show_square = False
+            
+        if self.angelshow_cb.isChecked():
+            self.show_angel = True
+        else:
+            self.show_angel = False
+
+        if self.circleshow_cb.isChecked():
+            self.show_circle = True
+        else:
+            self.show_circle = False
+
+        if self.istextfile_cb.isChecked():
+            self.text_file = True
+        else:
+            self.text_file = False
+        # QSPINBOX
+        self.beam_length = self.beamlength_sb.value()
+        self.lines_width = self.lineswidth.value()
+        self.flag_settings_changes = False
+        # QCOMBOBOX
+        def export_combobox_changed(text):
+            self.export_type = text
+        def angel_combobox_changed(text):
+            self.angel_type = text
+        
+        self.comboBox.currentTextChanged.connect(export_combobox_changed)
+        self.comboBox2.currentTextChanged.connect(angel_combobox_changed)
 
     def download_solution(self) -> None:
         pass
@@ -90,8 +138,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def change_grid(self) -> None:
         # TODO (Влад)
         if self.uploaded_state == None:
-            # Вывать ошибку, тк ничего не загружено
-            pass
+            # Вызвать ошибку, тк ничего не загружено
+            RaiseNotUploadedError(self)
 
     def display_img(self, img_path: str) -> None:
         # Отображение картинки
@@ -147,7 +195,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # TODO
         if self.uploaded_state is None:
             # Вывать ошибку, тк ничего не загружено
-            pass
+            RaiseNotUploadedError(self)
 
         if self.uploaded_state:
             # Файл

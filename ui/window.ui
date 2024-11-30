@@ -466,7 +466,7 @@ border: 1px;</string>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QListView" name="listView">
+                 <widget class="QListView" name="historyview">
                   <property name="minimumSize">
                    <size>
                     <width>256</width>
@@ -515,7 +515,7 @@ QPushButton:hover {
              </property>
              <property name="maximumSize">
               <size>
-               <width>0</width>
+               <width>44444</width>
                <height>16777215</height>
               </size>
              </property>
@@ -564,7 +564,7 @@ color: rgba(0, 0, 0, 0.5);</string>
                          <item>
                           <layout class="QHBoxLayout" name="horizontalLayout_9">
                            <item>
-                            <widget class="QCheckBox" name="checkBox_3">
+                            <widget class="QCheckBox" name="datashow_cb">
                              <property name="styleSheet">
                               <string notr="true">color: rgb(0, 0, 0);</string>
                              </property>
@@ -579,7 +579,7 @@ color: rgba(0, 0, 0, 0.5);</string>
                            <item>
                             <layout class="QVBoxLayout" name="verticalLayout_8">
                              <item>
-                              <widget class="QCheckBox" name="checkBox_4">
+                              <widget class="QCheckBox" name="sqareshow_cb">
                                <property name="styleSheet">
                                 <string notr="true">color: rgb(0, 0, 0);</string>
                                </property>
@@ -592,7 +592,7 @@ color: rgba(0, 0, 0, 0.5);</string>
                               </widget>
                              </item>
                              <item>
-                              <widget class="QCheckBox" name="checkBox_2">
+                              <widget class="QCheckBox" name="circleshow_cb">
                                <property name="styleSheet">
                                 <string notr="true">color: rgb(0, 0, 0);</string>
                                </property>
@@ -619,7 +619,7 @@ color: rgba(0, 0, 0, 0.5);</string>
                           </widget>
                          </item>
                          <item>
-                          <widget class="QCheckBox" name="checkBox">
+                          <widget class="QCheckBox" name="angelshow_cb">
                            <property name="styleSheet">
                             <string notr="true">color: rgb(0, 0, 0);</string>
                            </property>
@@ -693,7 +693,7 @@ color: rgba(0, 0, 0, 0.5);</string>
                           </widget>
                          </item>
                          <item>
-                          <widget class="QSpinBox" name="spinBox">
+                          <widget class="QSpinBox" name="beamlength_sb">
                            <property name="styleSheet">
                             <string notr="true">color: rgb(0, 0, 0);</string>
                            </property>
@@ -726,7 +726,7 @@ color: rgba(0, 0, 0, 0.5);</string>
                           </widget>
                          </item>
                          <item>
-                          <widget class="QSpinBox" name="spinBox_2">
+                          <widget class="QSpinBox" name="lineswidth">
                            <property name="styleSheet">
                             <string notr="true">color: rgb(0, 0, 0);</string>
                            </property>
@@ -793,16 +793,46 @@ color: rgb(0, 0, 0);</string>
                         </widget>
                        </item>
                        <item>
-                        <widget class="QComboBox" name="comboBox_2">
+                        <widget class="QComboBox" name="comboBox2">
                          <property name="styleSheet">
                           <string notr="true">color: rgb(0, 0, 0);</string>
                          </property>
+                         <item>
+                          <property name="text">
+                           <string>Архив *.tar (Если загружена папка)</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>JSON *.json (Если загружена папка)</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Таблица *.xlsx, *.xls (Если загружена папка)</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>PNG *.png (Если загружен файл)</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>JPEG *.jpeg (Если загружен файл)</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>TIFF *.tiff (Если загружен файл)</string>
+                          </property>
+                         </item>
                         </widget>
                        </item>
                       </layout>
                      </item>
                      <item>
-                      <widget class="QCheckBox" name="checkBox_5">
+                      <widget class="QCheckBox" name="istextfile_cb">
                        <property name="minimumSize">
                         <size>
                          <width>200</width>
