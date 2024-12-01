@@ -59,3 +59,7 @@ class EvaluatingAlg():
 
         rect = ((top_point, bottom_point), (left_point, right_point))
         return x, rect #!
+    
+eva = EvaluatingAlg(r"D:\MLProject2024\purple.png")
+answ, rect = eva.calc()
+print(answ)

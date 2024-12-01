@@ -2,7 +2,7 @@ import sys
 from PyQt6 import QtWidgets
 
 from window_ui import MainWindow
-from math_alg import EvaluatingAlg
+
 
 if __name__ == "__main__":
     # Передаём sys.argv, чтобы разрешить аргументы командной строки для приложения.
@@ -11,4 +11,4 @@ if __name__ == "__main__":
     window = MainWindow()
     window.show()
     app.setStyle('Fusion')
-    sys.exit(app.exec())  # app.exec() ???
+    sys.exit(app.exec())

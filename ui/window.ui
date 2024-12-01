@@ -466,7 +466,7 @@ border: 1px;</string>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QListView" name="historyview">
+                 <widget class="QTableView" name="historyview">
                   <property name="minimumSize">
                    <size>
                     <width>256</width>
@@ -658,7 +658,7 @@ color: rgba(0, 0, 0, 0.5);</string>
                            </property>
                            <item>
                             <property name="text">
-                             <string>Градусы ° </string>
+                             <string>Градусы °</string>
                             </property>
                            </item>
                            <item>

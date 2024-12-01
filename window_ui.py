@@ -1,8 +1,10 @@
 import os
 from PyQt6 import QtWidgets, QtCore, QtGui, uic
+from PIL import ImageQt
 import pandas as pd
 from parametrs import *
 from dialogs import *
+from calculation import EvaluatingAlg
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -18,7 +20,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.show_data = True
         self.show_square = True
         self.show_circle = True
-        self.angel_type = None
+        self.angel_type = "Градусы °"
         self.beam_length = 20
         self.lines_width = 2
 
@@ -29,6 +31,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._table_model = None
         self.table = None
+        self._original_table = None
         self.flag_settings_changes = False
 
         # QBUTTON
@@ -107,16 +110,32 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lines_width = self.lineswidth.value()
         self.flag_settings_changes = False
         # QCOMBOBOX
-        def export_combobox_changed(text):
-            self.export_type = text
-        def angel_combobox_changed(text):
-            self.angel_type = text
-        
-        self.comboBox.currentTextChanged.connect(export_combobox_changed)
-        self.comboBox2.currentTextChanged.connect(angel_combobox_changed)
+        self.angel_type = self.comboBox.currentText().strip()
+        self.export_type = self.comboBox2.currentText().strip()
 
-    def download_solution(self) -> None:
-        pass
+    def download_solution(self, grided_img: tuple) -> None:
+        if self.uploaded_state == None:
+            # Вызвать ошибку, тк ничего не загружено
+            RaiseNotUploadedError(self)
+            return
+        
+        if self.uploaded_state:
+            if self.export_type in {
+                "Архив *.tar (Если загружена папка)",
+                "JSON *.json (Если загружена папка)",
+                 "Таблица *.xlsx, *.xls (Если загружена папка)"
+                }:
+                # Вызвать ошибку тк вид экспорта не соответствует виду импорта
+                return
+            if self.export_type == "PNG *.png (Если загружен файл)":
+                pass
+            elif self.export_type == "JPEG *.jpeg (Если загружен файл)":
+                pass
+            else:
+                pass
+        else:
+            pass
+
         
     def upload_file(self) -> None:
         self.uploaded_state = True
@@ -127,12 +146,14 @@ class MainWindow(QtWidgets.QMainWindow):
             "Images (*.png *.jpg *.jpeg *.bmp *.tiff)"
         )
         self.import_way = file_name
+        self.historyview.setModel(None)  # Очищаем таблицу
         self.display_img(self.import_way)
         self.display_table()
 
     def upload_folder(self) -> None:
         self.uploaded_state = False
         self.import_way = QtWidgets.QFileDialog.getExistingDirectory(self, "Выберите папку")
+        self.historyview.setModel(None)  # Очищаем таблицу
         self.display_table()
 
     def change_grid(self) -> None:
@@ -140,10 +161,15 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.uploaded_state == None:
             # Вызвать ошибку, тк ничего не загружено
             RaiseNotUploadedError(self)
+            return
 
     def display_img(self, img_path: str) -> None:
         # Отображение картинки
-        img = QtGui.QPixmap(img_path)  # .scaled(*IMAGE_SIZE)  Портит качество изображения
+        if type(img_path) == str:
+            img = QtGui.QPixmap(img_path)  # .scaled(*IMAGE_SIZE)  Портит качество изображения
+        else:
+            img = img_path.convert("RGBA")  # Без 
+            img = ImageQt.toqpixmap(img)
         item = QtWidgets.QGraphicsPixmapItem(img)
         scene = QtWidgets.QGraphicsScene()
         scene.addItem(item)
@@ -165,8 +191,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 if file_extension in ALLOWED_FILE_FROMAT:
                     table_data.append([file_name, file_size, file_extension,])
         self.table = pd.DataFrame(table_data, columns=TABLE_HEAD)
-        self.table_model = TabelModel(self.table)
-        self.tableview.setModel(self.table_model)
+        self._original_table = self.table.copy()
+        self._table_model = TabelModel(self.table)
+        self.tableview.setModel(self._table_model)
         # Растягиваем таблицу по размеру окна
         self.tableview.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.tableview.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
@@ -180,7 +207,10 @@ class MainWindow(QtWidgets.QMainWindow):
         # self.uploaded_state заведомо != None
         if not self.uploaded_state:
             img_name = self.table.iloc[idx.row(), 0]
-            path = os.path.join(self.import_way, img_name)
+            if type(img_name) == str:
+                path = os.path.join(self.import_way, img_name)
+            else:
+                path = img_name
             self.display_img(path)
 
     def scale_img(self, way: bool) -> None:
@@ -196,13 +226,52 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.uploaded_state is None:
             # Вывать ошибку, тк ничего не загружено
             RaiseNotUploadedError(self)
-
+            return
+        
+        permissions = [self.show_square, self.show_circle, self.show_angel, self.show_data]
         if self.uploaded_state:
             # Файл
-            pass
+            # TODO: Нейронка
+            # ...
+            algorithm = EvaluatingAlg(self.import_way, self.lines_width, self.beam_length, self.angel_type, True)
+            
         else:
             # Папка
-            pass
+            # TODO: Нейронка
+            # ...
+            algorithm = EvaluatingAlg(self.import_way, self.lines_width, self.beam_length, self.angel_type, False)
+        
+        position = algorithm.find_rect()
+        solution = list()
+        grided_imgs = dict()
+        for path, rect in position:
+            file_name = os.path.basename(path)
+            angel, center, k, r = algorithm.calc(rect)
+            img = algorithm.draw(path, permissions, k, rect, r, center, angel)
+            solution.append((file_name, angel))
+            grided_imgs[file_name] = img
+        # Таблица
+        table = pd.DataFrame(solution, columns=["Имя файла", f"Угол ({self.angel_type.lower()})"])
+        table_model = TabelModel(table)
+        self.historyview.setModel(table_model)
+        # Растягиваем таблицу по размеру окна
+        self.historyview.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
+        self.historyview.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+        self.historyview.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.NoSelection)
+        self.temp_replace(grided_imgs)
+        self.highlighted_img(self.tableview.currentIndex())
+
+    def temp_replace(self, new_names: dict):
+        new_table_data = list()
+        for _, row in self._original_table.iterrows():
+            file_name, file_size, file_extension = row.tolist()
+            if type(file_name) == str:
+                new_table_data.append([new_names[file_name], file_size, file_extension])
+            
+        new_table = pd.DataFrame(new_table_data, columns=TABLE_HEAD)
+        self.table = new_table
+        # self._table_model.replace(new_table)
+        # self.tableview.setModel(self._table_model)
 
 
 
@@ -217,7 +286,7 @@ class TabelModel(QtCore.QAbstractTableModel):
         super().__init__()
         self._table = table
 
-    def data(self, idx: QtCore.QModelIndex, role) -> str:  # type(idx) ??
+    def data(self, idx: QtCore.QModelIndex, role: QtCore.Qt.ItemDataRole = QtCore.Qt.ItemDataRole.DisplayRole) -> str:  # type(idx) ??
         # Возвращает данные, которые будут отображаться по указанному индексу
         if role == QtCore.Qt.ItemDataRole.DisplayRole:  # DisplayRole - ключевые данные, которые будут отображаться в виде текста.
             cell_value = self._table.iloc[idx.row(), idx.column()]
@@ -238,3 +307,6 @@ class TabelModel(QtCore.QAbstractTableModel):
                 return str(self._table.columns[idx])
             if orientation == QtCore.Qt.Orientation.Vertical:
                 return str(self._table.index[idx])
+            
+    def replace(self, new_table: pd.DataFrame):
+        self._table = new_table
