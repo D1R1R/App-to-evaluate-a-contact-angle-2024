@@ -2,9 +2,12 @@ import os
 from PyQt6 import QtWidgets, QtCore, QtGui, uic
 from PIL import ImageQt
 import pandas as pd
-from parametrs import *
-from dialogs import *
-from calculation import EvaluatingAlg
+
+from ui_settings.dialogs import *
+from ui_settings.child_window_ui import ChildWindow
+from ui_settings.calculation import EvaluatingAlg
+from dependensies.parametrs import *
+from nn.neural_network import initialize_nn, predict
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -34,6 +37,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self._original_table = None
         self.flag_settings_changes = False
 
+        # CHANGE GRID WINDOW
+        self._chg_window = ChildWindow()
         # QBUTTON
         for button in self.centralwidget.findChildren(QtWidgets.QAbstractButton):  # Всем кнопкам в поле centralwidget устанавливаем NoFocus
             button.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
@@ -57,6 +62,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.process_btn.pressed.connect(lambda: self.process())
         self.minus_btn.pressed.connect(lambda: self.scale_img(False))
         self.plus_btn.pressed.connect(lambda: self.scale_img(True))
+        # Нейронная сеть
+        self._nn = initialize_nn()
     
     def open_frame(self, f: bool) -> None:
         if f:
@@ -113,7 +120,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.angel_type = self.comboBox.currentText().strip()
         self.export_type = self.comboBox2.currentText().strip()
 
-    def download_solution(self, grided_img: tuple) -> None:
+    def download_solution(self) -> None:
         if self.uploaded_state == None:
             # Вызвать ошибку, тк ничего не загружено
             RaiseNotUploadedError(self)
@@ -157,18 +164,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.display_table()
 
     def change_grid(self) -> None:
-        # TODO (Влад)
+        # TODO
         if self.uploaded_state == None:
             # Вызвать ошибку, тк ничего не загружено
             RaiseNotUploadedError(self)
             return
+        self._chg_window.show()
 
     def display_img(self, img_path: str) -> None:
         # Отображение картинки
         if type(img_path) == str:
             img = QtGui.QPixmap(img_path)  # .scaled(*IMAGE_SIZE)  Портит качество изображения
         else:
-            img = img_path.convert("RGBA")  # Без 
+            img = img_path.convert("RGBA")  # Без
             img = ImageQt.toqpixmap(img)
         item = QtWidgets.QGraphicsPixmapItem(img)
         scene = QtWidgets.QGraphicsScene()
@@ -229,19 +237,16 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         
         permissions = [self.show_square, self.show_circle, self.show_angel, self.show_data]
+        # NN
+        pred_img_mask = predict(self._nn, self.import_way, self.uploaded_state)
         if self.uploaded_state:
             # Файл
-            # TODO: Нейронка
-            # ...
             algorithm = EvaluatingAlg(self.import_way, self.lines_width, self.beam_length, self.angel_type, True)
-            
         else:
             # Папка
-            # TODO: Нейронка
-            # ...
             algorithm = EvaluatingAlg(self.import_way, self.lines_width, self.beam_length, self.angel_type, False)
         
-        position = algorithm.find_rect()
+        position = algorithm.find_rect(pred_img_mask)
         solution = list()
         grided_imgs = dict()
         for path, rect in position:
@@ -260,14 +265,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.historyview.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.NoSelection)
         self.temp_replace(grided_imgs)
         self.highlighted_img(self.tableview.currentIndex())
+        if self.uploaded_state:
+            idx = self.tableview.currentIndex()  # Только один объект всегда
+            img_name = self.table.iloc[idx.row(), 0]
+            self.display_img(img_name)
 
     def temp_replace(self, new_names: dict):
         new_table_data = list()
         for _, row in self._original_table.iterrows():
             file_name, file_size, file_extension = row.tolist()
             if type(file_name) == str:
-                new_table_data.append([new_names[file_name], file_size, file_extension])
-            
+                new_table_data.append([new_names[file_name], file_size, file_extension])           
         new_table = pd.DataFrame(new_table_data, columns=TABLE_HEAD)
         self.table = new_table
         # self._table_model.replace(new_table)

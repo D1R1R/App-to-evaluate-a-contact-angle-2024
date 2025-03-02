@@ -18,11 +18,12 @@ class EvaluatingAlg():
         self.beam_length = beam_length
         self.angel_type = 0 if angel_type == "Градусы °" else 1
     
-    def find_rect(self) -> tuple:
+    def find_rect(self, imgs_list: list) -> tuple:
         result = list()
-        for path in self._img_list:
-            img = Image.open(path).convert('L')  # Чтение изображения в черно-белом формате
-            img_array = np.array(img)  # Преобразуем изображение в массив NumPy
+        for img in imgs_list:
+            path = self._img_list[imgs_list.index(img)]
+
+            img_array = np.array(img)  # Преобразуем изображение в массив NumPy / mask
             top_point = None
             bottom_point = None
             left_point = None
@@ -57,7 +58,7 @@ class EvaluatingAlg():
         x0 = rect[0] + diff
         y0 = rect[1] + diff
         # Редиус
-        r = math.sqrt(((rect[0] - x0) ** 2) + ((y0 - y0) ** 2))
+        r = abs(rect[0] - x0)
         # Задаем точку
         y = rect[3]
         x = x0 - (math.sqrt((r ** 2) - ((y0 - y) ** 2)))
@@ -73,7 +74,6 @@ class EvaluatingAlg():
         #     k2 = abs(y0 - y) / abs(x0 - midle)
         #     angel2 = math.degrees(math.atan(k2))
         answer = 180 - angel1
-
         if self.angel_type:
             answer = math.radians(answer)
         return (answer, (x0, y0), (k, k2), r)
@@ -104,6 +104,7 @@ class EvaluatingAlg():
             draw.ellipse((x0 - r, y0 - r, x0 + r, y0 + r), outline="#006ffe", width=self.width)
         if permissions[2]:
             # Рисуем касательную и плоскость
+            # TODO
             draw.line(((x - self.beam_length), y + (k * self.beam_length), x, y), fill="#6fa8dc", width=self.width)
             draw.line((x, y, (x + self.beam_length), y + (k2 * self.beam_length)), fill="#6fa8dc", width=self.width)
             # TODO: arc

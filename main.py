@@ -1,7 +1,7 @@
 import sys
 from PyQt6 import QtWidgets
 
-from window_ui import MainWindow
+from ui_settings.window_ui import MainWindow
 
 
 if __name__ == "__main__":
