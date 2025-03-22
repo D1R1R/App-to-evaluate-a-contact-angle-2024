@@ -20,9 +20,8 @@ class EvaluatingAlg():
     
     def find_rect(self, imgs_list: list) -> tuple:
         result = list()
-        for img in imgs_list:
-            path = self._img_list[imgs_list.index(img)]
-
+        for img_idx, img in enumerate(imgs_list):
+            path = self._img_list[img_idx]
             img_array = np.array(img)  # Преобразуем изображение в массив NumPy / mask
             top_point = None
             bottom_point = None

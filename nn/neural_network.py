@@ -5,7 +5,6 @@ import torchvision.transforms as tr
 from PIL import Image
 
 from dependensies.parametrs import PATH_TO_WEIGHTS, IMG_SIZE
-from ui_settings.child_window_ui import ChildWindow_BAR
 
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')  # TODO: Ask user about device
@@ -107,44 +106,56 @@ def initialize_nn() -> nn.Module:
   load_chekpoint(model, "UNET_FULL_params_ep30.pt")
   return model
 
-def predict(model: nn.Module, path_x: torch.Tensor, state: bool) -> torch.Tensor:
-  bar = ChildWindow_BAR()
-  bar.show()
-  
+def predict(model: nn.Module, path_x: str, state: bool=None, _mode: bool=False) -> torch.Tensor:
   in_image_tr = tr.Compose([
     tr.Resize(IMG_SIZE),
     tr.Grayscale(num_output_channels=3),
     tr.ToTensor(),
   ])
-  sizes_list = list()
-  x = list()
-  if not state:
-    # Folder
-    for imgs in os.listdir(path_x):
-      img = os.path.join(path_x, imgs)
-      img = Image.open(img)
+  
+  if _mode:  # One per iter
+    img = Image.open(path_x)
+    size = img.size[::-1]
+    img = in_image_tr(img)
+
+    x = img.unsqueeze(0)
+    prediction = model.process(x).squeeze()
+    prediction[prediction < 0] = 0
+    prediction[prediction > 0] = 1
+    prediction = tr.Resize(size)(tr.ToPILImage()(prediction))
+
+  else:  # One and more per iter
+    sizes_list = list()
+    x = list()
+    if not state:
+      # Folder
+      for imgs in os.listdir(path_x):
+        img = os.path.join(path_x, imgs)
+        img = Image.open(img)
+        sizes_list.append(img.size[::-1])
+        img = in_image_tr(img)
+        x.append(img)
+    else:
+      # Single file
+      img = Image.open(path_x)
       sizes_list.append(img.size[::-1])
       img = in_image_tr(img)
       x.append(img)
-  else:
-    # Single file
-    img = Image.open(path_x)
-    sizes_list.append(img.size[::-1])
-    img = in_image_tr(img)
-    x.append(img)
-  x = torch.stack(x)  
-  # prediction = model.process(x)
-  prediction = list()
-  for img_idx in range(x.shape[0]):
-    single_img = x[img_idx].unsqueeze(0)
-    predictoin_x = model.process(single_img)
-    prediction.append(predictoin_x)
-    bar.progress_bar.setValue(img_idx)
-  prediction = torch.cat(prediction, dim=0)
-  prediction[prediction < 0] = 0
-  prediction[prediction > 0] = 1
-  prediction = [tr.ToPILImage()(pred_mask) for pred_mask in prediction]
-  for idx in range(len(sizes_list)):
-    size = sizes_list[idx]
-    prediction[idx] = tr.Resize(size)(prediction[idx])
+    x = torch.stack(x)  
+    # prediction = model.process(x)
+    prediction = list()
+
+    for img_idx in range(x.shape[0]):
+      single_img = x[img_idx].unsqueeze(0)
+      predictoin_x = model.process(single_img)
+      prediction.append(predictoin_x)
+
+    prediction = torch.cat(prediction, dim=0)
+    prediction[prediction < 0] = 0
+    prediction[prediction > 0] = 1
+    prediction = [tr.ToPILImage()(pred_mask) for pred_mask in prediction]
+    for idx in range(len(sizes_list)):
+      size = sizes_list[idx]
+      prediction[idx] = tr.Resize(size)(prediction[idx])
+    
   return prediction

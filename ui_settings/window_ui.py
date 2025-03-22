@@ -1,5 +1,8 @@
 import os
+from torch import nn
 from PyQt6 import QtWidgets, QtCore, QtGui, uic
+from PyQt6.QtCore import QThread
+from PyQt6.QtCore import pyqtSignal as Signal
 from PIL import ImageQt
 import pandas as pd
 
@@ -8,7 +11,7 @@ from ui_settings.child_window_ui import ChildWindow
 from ui_settings.calculation import EvaluatingAlg
 from dependensies.parametrs import *
 from nn.neural_network import initialize_nn, predict
-
+from ui_settings.child_window_ui import ChildWindow_BAR
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, *args, **kwargs) -> None:
@@ -64,6 +67,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.plus_btn.pressed.connect(lambda: self.scale_img(True))
         # Нейронная сеть
         self._nn = initialize_nn()
+        # TREAD
+        self._tread = None
     
     def open_frame(self, f: bool) -> None:
         if f:
@@ -87,6 +92,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def apply_settings(self) -> None:
         # TODO: ENABLED\DISABLED
+        if self._tread != None:
+            if self._tread.isRunning():
+                # Вывать предупреждение, тк поток не закончен
+                answer = RaiseTreadInteruptionMessage(self, "Выбранны еизменения не повлияют на результат")
+                if not answer:
+                    return
+                self.bar.interupt()
+                self._tread = None
         # QCHECKBOX
         if self.datashow_cb.isChecked():
             self.show_data = True
@@ -121,10 +134,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.export_type = self.comboBox2.currentText().strip()
 
     def download_solution(self) -> None:
+        # TODO
         if self.uploaded_state == None:
             # Вызвать ошибку, тк ничего не загружено
             RaiseNotUploadedError(self)
             return
+        if self._tread != None:
+            if self._tread.isRunning():
+                # Вывать предупреждение, тк поток не закончен
+                answer = RaiseTreadInteruptionMessage(self, "Загрузка результатов станет доступна после завершения потока")
+                if not answer:
+                    return
+                self.bar.interupt()
+                self._tread = None
         
         if self.uploaded_state:
             if self.export_type in {
@@ -145,6 +167,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
         
     def upload_file(self) -> None:
+        # NOTE: При загрузке одного файла отдельный поток не создается
+        if self._tread != None:
+            if self._tread.isRunning():
+                # Вывать предупреждение, тк поток не закончен
+                answer = RaiseTreadInteruptionMessage(self, "Загрузив файл вы прервете поток")
+                if not answer:
+                    return
+                self.bar.interupt()
+                self._tread = None
+
         self.uploaded_state = True
         file_name, _ = QtWidgets.QFileDialog.getOpenFileName(
             self,
@@ -158,6 +190,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.display_table()
 
     def upload_folder(self) -> None:
+        if self._tread != None:
+            if self._tread.isRunning():
+                # Вывать предупреждение, тк поток не закончен
+                answer = RaiseTreadInteruptionMessage(self, "Загрузив папку вы прервете поток")
+                if not answer:
+                    return
+                self.bar.interupt()
+                self._tread = None
+
         self.uploaded_state = False
         self.import_way = QtWidgets.QFileDialog.getExistingDirectory(self, "Выберите папку")
         self.historyview.setModel(None)  # Очищаем таблицу
@@ -169,10 +210,19 @@ class MainWindow(QtWidgets.QMainWindow):
             # Вызвать ошибку, тк ничего не загружено
             RaiseNotUploadedError(self)
             return
+        if self._tread != None:
+            if self._tread.isRunning():
+                # Вывать предупреждение, тк поток не закончен
+                answer = RaiseTreadInteruptionMessage(self, "Данная опция станет доступна после завершения потока")
+                if not answer:
+                    return
+                self.bar.interupt()
+                self._tread = None
+        
         self._chg_window.show()
 
     def display_img(self, img_path: str) -> None:
-        # Отображение картинки
+        """ Отображение картинки в окне"""
         if type(img_path) == str:
             img = QtGui.QPixmap(img_path)  # .scaled(*IMAGE_SIZE)  Портит качество изображения
         else:
@@ -184,7 +234,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.graphicview.setScene(scene)
 
     def display_table(self) -> None:
-        # Отображение таблицы
+        """ Отображение таблицы """
         table_data = list()
         if self.uploaded_state:
             file_name = os.path.basename(self.import_way)
@@ -212,6 +262,7 @@ class MainWindow(QtWidgets.QMainWindow):
         follow.currentRowChanged.connect(self.highlighted_img)
 
     def highlighted_img(self, idx: QtCore.QModelIndex) -> None:
+        """ Вспомогательная функция к таблице. Отображает выбранное изоюражение."""
         # self.uploaded_state заведомо != None
         if not self.uploaded_state:
             img_name = self.table.iloc[idx.row(), 0]
@@ -222,7 +273,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.display_img(path)
 
     def scale_img(self, way: bool) -> None:
-        # Изменяем размер картинки
+        """ Изменение размера картинки """
         if self.uploaded_state != None:
             if way:
                 self.graphicview.scale(1.1, 1.1)
@@ -230,15 +281,34 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.graphicview.scale(0.9, 0.9)
 
     def process(self) -> None:
+        """ Обработка изображений нейронной сетью. """
         # TODO
         if self.uploaded_state is None:
             # Вывать ошибку, тк ничего не загружено
             RaiseNotUploadedError(self)
             return
+        if self._tread != None:
+            if self._tread.isRunning():
+                # Вывать предупреждение, тк поток не закончен
+                answer = RaiseTreadInteruptionMessage(self, "Начав обработку заново вы прервете существующий поток")
+                if not answer:
+                    return
+                self.bar.interupt()
+                self._tread = None
         
-        permissions = [self.show_square, self.show_circle, self.show_angel, self.show_data]
         # NN
-        pred_img_mask = predict(self._nn, self.import_way, self.uploaded_state)
+        if not self.uploaded_state:
+            # IN NEW THREAD
+            self.bar = ChildWindow_BAR(len(os.listdir(self.import_way)), self.calculate_angle)
+            self.bar.work_requested.emit(self._nn, self.import_way)
+            self._tread = self.bar.get_tread_obj()
+        else:
+            # WITHOUT NEW THREAD
+            pred_img_mask = predict(self._nn, self.import_way, self.uploaded_state)
+            self.calculate_angle(pred_img_mask)
+    
+    def calculate_angle(self, pred_img_mask) -> None:
+        """ Вычисление угла. Разметка изображений. Обновление таблицы."""
         if self.uploaded_state:
             # Файл
             algorithm = EvaluatingAlg(self.import_way, self.lines_width, self.beam_length, self.angel_type, True)
@@ -247,6 +317,8 @@ class MainWindow(QtWidgets.QMainWindow):
             algorithm = EvaluatingAlg(self.import_way, self.lines_width, self.beam_length, self.angel_type, False)
         
         position = algorithm.find_rect(pred_img_mask)
+        permissions = [self.show_square, self.show_circle, self.show_angel, self.show_data]
+        
         solution = list()
         grided_imgs = dict()
         for path, rect in position:
@@ -271,6 +343,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.display_img(img_name)
 
     def temp_replace(self, new_names: dict):
+        """ Вспомогательная функция таблицы. Для обработанных изображений. """
         new_table_data = list()
         for _, row in self._original_table.iterrows():
             file_name, file_size, file_extension = row.tolist()

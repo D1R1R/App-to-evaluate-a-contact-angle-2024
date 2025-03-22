@@ -15,6 +15,20 @@ def RaiseSettingNotSavedMessage(parent) -> bool:
         return False
     return True
 
+def RaiseTreadInteruptionMessage(parent, text) -> bool:
+    """Вызывает окно с сообщением"""
+    window = QMessageBox(parent)
+    window.setWindowTitle("Предупреждение")
+    window.setIcon(QMessageBox.Icon.Warning)
+    window.setText(f"Процесс обработки уже запущен. {text}. Прервать обработку изображений?")
+    buttons = QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+    window.setStandardButtons(buttons)
+
+    button = window.exec()
+    if button != QMessageBox.StandardButton.Yes:
+        return False
+    return True
+
 
 def RaiseNotUploadedError(parent) -> bool:
     """Вызывает окно с ошибкой"""
