@@ -1,6 +1,7 @@
 import os
 
 from torch import nn
+from PIL import ImageQt
 from PyQt6 import QtWidgets, QtCore, QtGui, uic
 
 from PyQt6.QtCore import QThread
@@ -19,6 +20,29 @@ class ChildWindow(QtWidgets.QWidget):
         # Импортируем ui
         uic.loadUi(PATH_TO_UI_CHILD, self)  # Или преобразуем ui в py с помощью pyuic6
         self.setFixedSize(QtCore.QSize(800, 500))
+        self.setWindowIcon(QtGui.QIcon(r"ui_settings\ui\droplet_icon.png"))
+        # Кнопки
+        self.minus_btn.pressed.connect(lambda: self.scale_img(False))
+        self.plus_btn.pressed.connect(lambda: self.scale_img(True))
+
+    def image_receiver(self, img_path):
+        if type(img_path) == str:
+            img = QtGui.QPixmap(img_path)
+        else:
+            img = img_path.convert("RGBA")
+            img = ImageQt.toqpixmap(img)
+        item = QtWidgets.QGraphicsPixmapItem(img)
+        scene = QtWidgets.QGraphicsScene()
+        scene.addItem(item)
+        self.graphicsView.setScene(scene)
+    
+    def scale_img(self, way: bool) -> None:
+        """ Изменение размера картинки """
+        if way:
+            self.graphicsView.scale(1.1, 1.1)
+        else:
+            self.graphicsView.scale(0.9, 0.9)
+
 
 
 class ChildWindow_BAR(QtWidgets.QWidget):
@@ -28,6 +52,7 @@ class ChildWindow_BAR(QtWidgets.QWidget):
         super().__init__()
         # Импортируем ui
         uic.loadUi(PATH_TO_UI_BAR, self)  # Или преобразуем ui в py с помощью pyuic6
+        self.setWindowIcon(QtGui.QIcon(r"ui_settings\ui\droplet_icon.png"))
         self.progress_bar.setValue(0)
         self.progress_bar.setMaximum(num)
         # Results

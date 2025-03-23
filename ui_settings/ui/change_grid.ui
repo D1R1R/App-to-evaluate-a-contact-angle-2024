@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>469</width>
-    <height>307</height>
+    <height>310</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -17,7 +17,11 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Изменить разметку</string>
+   <string>DropletAngle -&gt; Изменить разметку</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>:/icon/icon.png</normaloff>:/icon/icon.png</iconset>
   </property>
   <property name="styleSheet">
    <string notr="true">background-color: rgb(255, 255, 255);</string>
@@ -40,7 +44,7 @@
    </property>
    <item>
     <widget class="QFrame" name="MainFrame">
-     <layout class="QHBoxLayout" name="horizontalLayout">
+     <layout class="QVBoxLayout" name="verticalLayout_3">
       <property name="spacing">
        <number>0</number>
       </property>
@@ -57,29 +61,31 @@
        <number>0</number>
       </property>
       <item>
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <property name="spacing">
-         <number>0</number>
-        </property>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
         <item>
-         <widget class="QGraphicsView" name="graphicsView">
-          <property name="styleSheet">
-           <string notr="true">background-color: qlineargradient(spread:reflect, x1:0.523, y1:0, x2:0.517045, y2:1, stop:0.318182 rgba(213, 213, 213, 255), stop:1 rgba(145, 145, 145, 255));
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QGraphicsView" name="graphicsView">
+            <property name="styleSheet">
+             <string notr="true">background-color: qlineargradient(spread:reflect, x1:0.523, y1:0, x2:0.517045, y2:1, stop:0.318182 rgba(213, 213, 213, 255), stop:1 rgba(145, 145, 145, 255));
 border: 0px;</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="Line" name="line">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="apply">
-          <property name="styleSheet">
-           <string notr="true">QPushButton {
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="line">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="apply">
+            <property name="styleSheet">
+             <string notr="true">QPushButton {
    border: 2px solid rgba(199, 199, 199, 0.4);
 	border-radius: 4px;
 	background-color: rgba(199, 199, 199, 0.2);
@@ -92,28 +98,28 @@ QPushButton:hover {
 	background-color: rgba(0, 0, 0, 0.3);
 	color: rgb(255, 255, 255);
 }</string>
-          </property>
-          <property name="text">
-           <string>Применить новую разметку</string>
-          </property>
-         </widget>
+            </property>
+            <property name="text">
+             <string>Применить новую разметку</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="verticalLayout_2">
-        <property name="spacing">
-         <number>10</number>
-        </property>
         <item>
-         <widget class="QPushButton" name="chg_drop">
-          <property name="styleSheet">
-           <string notr="true">QPushButton {
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <property name="bottomMargin">
+           <number>20</number>
+          </property>
+          <item>
+           <widget class="QPushButton" name="chg_drop">
+            <property name="styleSheet">
+             <string notr="true">QPushButton {
    border: 2px solid rgba(199, 199, 199, 0.4);
 	border-radius: 4px;
 	background-color: rgba(199, 199, 199, 0.2);
-	min-height: 80px;
-	min-width: 80px;
+	min-height: 50px;
+	min-width: 100px;
 	color: rgb(0, 0, 0);
 }
 QPushButton:hover {
@@ -121,21 +127,21 @@ QPushButton:hover {
 	background-color: rgba(0, 0, 0, 0.3);
 	color: rgb(255, 255, 255);
 }</string>
-          </property>
-          <property name="text">
-           <string>Капля</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="chg_line">
-          <property name="styleSheet">
-           <string notr="true">QPushButton {
+            </property>
+            <property name="text">
+             <string>Капля</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="chg_line">
+            <property name="styleSheet">
+             <string notr="true">QPushButton {
    border: 2px solid rgba(199, 199, 199, 0.4);
 	border-radius: 4px;
 	background-color: rgba(199, 199, 199, 0.2);
-	min-height: 80px;
-	min-width: 80px;
+	min-height: 50px;
+	min-width: 100px;
 	color: rgb(0, 0, 0);
 }
 QPushButton:hover {
@@ -143,24 +149,74 @@ QPushButton:hover {
 	background-color: rgba(0, 0, 0, 0.3);
 	color: rgb(255, 255, 255);
 }</string>
-          </property>
-          <property name="text">
-           <string>Плоскость</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="verticalSpacer">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
+            </property>
+            <property name="text">
+             <string>Плоскость</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <item>
+             <widget class="QPushButton" name="plus_btn">
+              <property name="styleSheet">
+               <string notr="true">QPushButton {
+   border: 2px solid rgba(199, 199, 199, 0.4);
+	border-radius: 4px;
+	background-color: rgba(199, 199, 199, 0.2);
+	min-height: 20px;
+	min-width: 30px;
+	color: rgb(0, 0, 0);
+}
+QPushButton:hover {
+   border: 0;
+	background-color: rgba(0, 0, 0, 0.3);
+	color: rgb(255, 255, 255);
+}</string>
+              </property>
+              <property name="text">
+               <string>+</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="minus_btn">
+              <property name="styleSheet">
+               <string notr="true">QPushButton {
+   border: 2px solid rgba(199, 199, 199, 0.4);
+	border-radius: 4px;
+	background-color: rgba(199, 199, 199, 0.2);
+	min-height: 20px;
+	min-width: 30px;
+	color: rgb(0, 0, 0);
+}
+QPushButton:hover {
+   border: 0;
+	background-color: rgba(0, 0, 0, 0.3);
+	color: rgb(255, 255, 255);
+}</string>
+              </property>
+              <property name="text">
+               <string>-</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
         </item>
        </layout>
       </item>

@@ -23,7 +23,11 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Goutte</string>
+   <string>DropletAngle</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>:/icon/icon.png</normaloff>:/icon/icon.png</iconset>
   </property>
   <property name="styleSheet">
    <string notr="true">padding: 0px;

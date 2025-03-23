@@ -1,4 +1,7 @@
-from PyQt6.QtWidgets import QMessageBox, QLayout, QLabel
+from PyQt6.QtGui import QMovie
+from PyQt6.QtWidgets import QMessageBox, QSplashScreen
+
+from dependensies.parametrs import PATH_TO_GIF
 
 
 def RaiseSettingNotSavedMessage(parent) -> bool:
@@ -40,3 +43,18 @@ def RaiseNotUploadedError(parent) -> bool:
     window.setStandardButtons(buttons)
 
     button = window.exec()
+
+
+class LoaderSplashScreen(QSplashScreen):
+    def __init__(self, *args, **kwargs):
+        super(LoaderSplashScreen, self).__init__(*args, **kwargs)
+        self.movie = QMovie(PATH_TO_GIF)
+        self.movie.frameChanged.connect(self.onFrameChanged)
+        self.movie.start()
+
+    def onFrameChanged(self, _):
+        self.setPixmap(self.movie.currentPixmap())
+
+    def finish(self, widget):
+        self.movie.stop()
+        super(LoaderSplashScreen, self).finish(widget)

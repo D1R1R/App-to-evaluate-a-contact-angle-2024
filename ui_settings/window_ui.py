@@ -1,8 +1,9 @@
 import os
 from torch import nn
-from PyQt6 import QtWidgets, QtCore, QtGui, uic
-from PyQt6.QtCore import QThread
-from PyQt6.QtCore import pyqtSignal as Signal
+
+from PyQt6 import QtCore, QtGui, QtWidgets
+from PyQt6 import uic
+
 from PIL import ImageQt
 import pandas as pd
 
@@ -13,11 +14,13 @@ from dependensies.parametrs import *
 from nn.neural_network import initialize_nn, predict
 from ui_settings.child_window_ui import ChildWindow_BAR
 
+
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         # Импортируем ui
         uic.loadUi(PATH_TO_UI, self)  # Или преобразуем ui в py с помощью pyuic6
+        self.setWindowIcon(QtGui.QIcon(r"ui_settings\ui\droplet_icon.png"))
         # ПАРАМЕТРЫ
         self.uploaded_state = None  # True - файл; False - папка; None - ничего
         self.import_way = None
@@ -65,6 +68,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.process_btn.pressed.connect(lambda: self.process())
         self.minus_btn.pressed.connect(lambda: self.scale_img(False))
         self.plus_btn.pressed.connect(lambda: self.scale_img(True))
+        # 5. Qtable
+        self._follow = None
         # Нейронная сеть
         self._nn = initialize_nn()
         # TREAD
@@ -164,7 +169,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 pass
         else:
             pass
-
         
     def upload_file(self) -> None:
         # NOTE: При загрузке одного файла отдельный поток не создается
@@ -220,7 +224,18 @@ class MainWindow(QtWidgets.QMainWindow):
                 self._tread = None
         
         self._chg_window.show()
-
+        
+        if self.uploaded_state:
+            self._chg_window.image_receiver(self.import_way)
+        else:
+            idx = self._follow.currentIndex()
+            img_name = self.table.iloc[idx.row(), 0]
+            if type(img_name) == str:
+                img_path = os.path.join(self.import_way, img_name)
+            else:
+                img_path = img_name
+            self._chg_window.image_receiver(img_path)
+    
     def display_img(self, img_path: str) -> None:
         """ Отображение картинки в окне"""
         if type(img_path) == str:
@@ -258,8 +273,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tableview.horizontalHeader().setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
         self.tableview.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         # Отслеживаем клики по таблице
-        follow = self.tableview.selectionModel()
-        follow.currentRowChanged.connect(self.highlighted_img)
+        self._follow = self.tableview.selectionModel()
+        self._follow.currentRowChanged.connect(self.highlighted_img)
 
     def highlighted_img(self, idx: QtCore.QModelIndex) -> None:
         """ Вспомогательная функция к таблице. Отображает выбранное изоюражение."""
@@ -282,7 +297,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def process(self) -> None:
         """ Обработка изображений нейронной сетью. """
-        # TODO
         if self.uploaded_state is None:
             # Вывать ошибку, тк ничего не загружено
             RaiseNotUploadedError(self)
@@ -307,7 +321,7 @@ class MainWindow(QtWidgets.QMainWindow):
             pred_img_mask = predict(self._nn, self.import_way, self.uploaded_state)
             self.calculate_angle(pred_img_mask)
     
-    def calculate_angle(self, pred_img_mask) -> None:
+    def calculate_angle(self, pred_img_mask: list) -> None:
         """ Вычисление угла. Разметка изображений. Обновление таблицы."""
         if self.uploaded_state:
             # Файл
