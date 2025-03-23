@@ -62,7 +62,7 @@ class ChildWindow_BAR(QtWidgets.QWidget):
     def interupt(self):
         self.progress_bar.setValue(0)
         self.close()
-        self.worker_thread.quit()
+        self.worker_thread.terminate()
 
 
 class NN_Worker(QObject):
