@@ -5,7 +5,7 @@ from PIL import Image, ImageDraw
 
 
 class EvaluatingAlg():
-    def __init__(self, path: str, width: int, beam_length: int, angel_type: str, state: bool) -> None:
+    def __init__(self, path: str, width: int, beam_length: int, angel_type: str, state: bool, parent) -> None:
         self._img_list = list()
         if not state:
             for imgs in os.listdir(path):
@@ -17,6 +17,8 @@ class EvaluatingAlg():
         self.width = width
         self.beam_length = beam_length
         self.angel_type = 0 if angel_type == "Градусы °" else 1
+
+        self._parent = parent
     
     def find_rect(self, imgs_list: list) -> tuple:
         result = list()
@@ -60,22 +62,25 @@ class EvaluatingAlg():
         r = abs(rect[0] - x0)
         # Задаем точку
         y = rect[3]
-        x = x0 - (math.sqrt((r ** 2) - ((y0 - y) ** 2)))
-        # Ищем k касательной
-        k = self.derivative_f(x, x0, r)
-        angel1 = abs(math.degrees(math.atan(k)))
-        # Ищем k секущей
-        k2 = 0
-        # TODO: Учитывать наклон поверхности
-        # if midle <= 5:  # or angel1 <= 5
-        #     angel2 = 0
-        # else:
-        #     k2 = abs(y0 - y) / abs(x0 - midle)
-        #     angel2 = math.degrees(math.atan(k2))
-        answer = 180 - angel1
-        if self.angel_type:
-            answer = math.radians(answer)
-        return (answer, (x0, y0), (k, k2), r)
+        try:
+            x = x0 - (math.sqrt((r ** 2) - ((y0 - y) ** 2)))
+             # Ищем k касательной
+            k = self.derivative_f(x, x0, r)
+            angel1 = abs(math.degrees(math.atan(k)))
+            # Ищем k секущей
+            k2 = 0
+            # TODO: Учитывать наклон поверхности
+            # if midle <= 5:  # or angel1 <= 5
+            #     angel2 = 0
+            # else:
+            #     k2 = abs(y0 - y) / abs(x0 - midle)
+            #     angel2 = math.degrees(math.atan(k2))
+            answer = 180 - angel1
+            if self.angel_type:
+                answer = math.radians(answer)
+            return (answer, (x0, y0), (k, k2), r)
+        except:
+            return False
 
     def derivative_f(self, x: int, x0: int, r: int) -> int:
         """Производная к функции. Возвращает значение в точке х."""

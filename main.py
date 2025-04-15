@@ -9,16 +9,16 @@ if __name__ == "__main__":
     # Передаём sys.argv, чтобы разрешить аргументы командной строки для приложения.
     app = QApplication(sys.argv)
     # Экран загрузки
-    splash = LoaderSplashScreen()
-    splash.show()
-    # Минимум один оборот заставки
-    start = time.time()
-    while time.time() < start + 8:
-        app.processEvents()
+    # splash = LoaderSplashScreen()
+    # splash.show()
+    # # Минимум один оборот заставки
+    # start = time.time()
+    # while time.time() < start + 8:
+    #     app.processEvents()
     
     window = MainWindow()
     window.show()
-    splash.finish(window)
+    # splash.finish(window)
     app.setStyle('Fusion')
 
     sys.exit(app.exec())

@@ -44,6 +44,17 @@ def RaiseNotUploadedError(parent) -> bool:
 
     button = window.exec()
 
+def RaiseMathError(parent, name_list) -> bool:
+    """Вызывает окно с ошибкой"""
+    window = QMessageBox(parent)
+    window.setWindowTitle("Ошибка")
+    window.setIcon(QMessageBox.Icon.Critical)
+    window.setText(f"Ошибка обработки изображений: {',  ' .join(name_list)}. Данные изображения были пропущены, вы можете обработать их вручную.")
+    buttons = QMessageBox.StandardButton.Ok
+    window.setStandardButtons(buttons)
+
+    button = window.exec()
+
 
 class LoaderSplashScreen(QSplashScreen):
     def __init__(self, *args, **kwargs):

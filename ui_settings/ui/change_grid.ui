@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>469</width>
-    <height>310</height>
+    <width>546</width>
+    <height>255</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -112,46 +112,65 @@ QPushButton:hover {
            <number>20</number>
           </property>
           <item>
-           <widget class="QPushButton" name="chg_drop">
+           <widget class="QTextBrowser" name="textBrowser">
             <property name="styleSheet">
-             <string notr="true">QPushButton {
-   border: 2px solid rgba(199, 199, 199, 0.4);
-	border-radius: 4px;
-	background-color: rgba(199, 199, 199, 0.2);
-	min-height: 50px;
-	min-width: 100px;
-	color: rgb(0, 0, 0);
-}
-QPushButton:hover {
-   border: 0;
-	background-color: rgba(0, 0, 0, 0.3);
-	color: rgb(255, 255, 255);
-}</string>
+             <string notr="true">color: rgba(0, 0, 0, 150);
+font-size: 10px;
+max-width: 300px;
+max-height: 100px;</string>
             </property>
-            <property name="text">
-             <string>Капля</string>
+            <property name="html">
+             <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:10px; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:131073;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Зажмите левую кнопку мыши и выделите прямоугольник ограничивающий каплю.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="chg_line">
+           <widget class="QLabel" name="label">
             <property name="styleSheet">
-             <string notr="true">QPushButton {
-   border: 2px solid rgba(199, 199, 199, 0.4);
-	border-radius: 4px;
-	background-color: rgba(199, 199, 199, 0.2);
-	min-height: 50px;
-	min-width: 100px;
-	color: rgb(0, 0, 0);
-}
-QPushButton:hover {
-   border: 0;
-	background-color: rgba(0, 0, 0, 0.3);
-	color: rgb(255, 255, 255);
-}</string>
+             <string notr="true">color: rgb(0, 0, 0);</string>
             </property>
             <property name="text">
-             <string>Плоскость</string>
+             <string>Толщина направляющих линий:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="width_spin">
+            <property name="styleSheet">
+             <string notr="true">color: rgb(0, 0, 0);</string>
+            </property>
+            <property name="minimum">
+             <number>0</number>
+            </property>
+            <property name="value">
+             <number>10</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_2">
+            <property name="styleSheet">
+             <string notr="true">color: rgb(0, 0, 0);</string>
+            </property>
+            <property name="text">
+             <string>Толщина ограничивающего квадрата:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="width_spin2">
+            <property name="styleSheet">
+             <string notr="true">color: rgb(0, 0, 0);</string>
+            </property>
+            <property name="minimum">
+             <number>0</number>
+            </property>
+            <property name="value">
+             <number>5</number>
             </property>
            </widget>
           </item>

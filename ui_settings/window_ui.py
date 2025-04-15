@@ -15,6 +15,7 @@ from nn.neural_network import initialize_nn, predict
 from ui_settings.child_window_ui import ChildWindow_BAR
 
 
+
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -42,9 +43,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.table = None
         self._original_table = None
         self.flag_settings_changes = False
-
         # CHANGE GRID WINDOW
         self._chg_window = ChildWindow()
+        self._chg_window.signalCoords.connect(self.change_grid_receiver)
         # QBUTTON
         for button in self.centralwidget.findChildren(QtWidgets.QAbstractButton):  # Всем кнопкам в поле centralwidget устанавливаем NoFocus
             button.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
@@ -69,7 +70,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.minus_btn.pressed.connect(lambda: self.scale_img(False))
         self.plus_btn.pressed.connect(lambda: self.scale_img(True))
         # 5. Qtable
+        self.highlighted_img_idx = None
         self._follow = None
+
+        self.history_table = None
         # Нейронная сеть
         self._nn = initialize_nn()
         # TREAD
@@ -180,8 +184,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     return
                 self.bar.interupt()
                 self._tread = None
-
-        self.uploaded_state = True
+        
         file_name, _ = QtWidgets.QFileDialog.getOpenFileName(
             self,
             "Выберите файл", 
@@ -189,9 +192,12 @@ class MainWindow(QtWidgets.QMainWindow):
             "Images (*.png *.jpg *.jpeg *.bmp *.tiff)"
         )
         self.import_way = file_name
-        self.historyview.setModel(None)  # Очищаем таблицу
-        self.display_img(self.import_way)
-        self.display_table()
+        if self.import_way:
+            self.uploaded_state = True
+            self.historyview.setModel(None)  # Очищаем таблицу
+            self.display_img(self.import_way)
+            self.display_table()
+            self.highlighted_img(self.tableview.currentIndex())
 
     def upload_folder(self) -> None:
         if self._tread != None:
@@ -203,13 +209,14 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.bar.interupt()
                 self._tread = None
 
-        self.uploaded_state = False
         self.import_way = QtWidgets.QFileDialog.getExistingDirectory(self, "Выберите папку")
-        self.historyview.setModel(None)  # Очищаем таблицу
-        self.display_table()
+        if self.import_way:
+            self.uploaded_state = False
+            self.historyview.setModel(None)  # Очищаем таблицу
+            self.display_table()
+            self.highlighted_img(self.tableview.currentIndex())
 
     def change_grid(self) -> None:
-        # TODO
         if self.uploaded_state == None:
             # Вызвать ошибку, тк ничего не загружено
             RaiseNotUploadedError(self)
@@ -233,9 +240,59 @@ class MainWindow(QtWidgets.QMainWindow):
             if type(img_name) == str:
                 img_path = os.path.join(self.import_way, img_name)
             else:
-                img_path = img_name
+                row_idx = self.table["Имя файла"].to_list().index(img_name)
+                img_lists = os.listdir(self.import_way)
+                img_path = os.path.join(self.import_way, img_lists[row_idx])
             self._chg_window.image_receiver(img_path)
-    
+
+    def change_grid_receiver(self, rect: tuple) -> None:
+        img_path = self.table.iloc[self.highlighted_img_idx.row(), 0]
+        if type(img_path) == str:
+            img_path = os.path.join(self.import_way, img_path)
+        
+        if type(img_path) == str:
+            row_idx = self.table["Имя файла"].to_list().index(os.path.basename(img_path))
+            img_name = img_path
+        else:
+            row_idx = self.table["Имя файла"].to_list().index(img_path)
+            if not self.uploaded_state:
+                img_lists = os.listdir(self.import_way)
+                img_name = os.path.join(self.import_way, img_lists[row_idx])
+            else:
+                img_name = self.import_way
+                            
+        algorithm = EvaluatingAlg(img_name, self.lines_width, self.beam_length, self.angel_type, True, self)
+        permissions = [self.show_square, self.show_circle, self.show_angel, self.show_data]
+        angel, center, k, r = algorithm.calc((rect, None))
+        img = algorithm.draw(img_name, permissions, k, (rect, None), r, center, angel)
+        # Table
+        new_table_data = list()
+        for idx, row in self.table.iterrows():
+            file_name, file_size, file_extension = row.tolist()
+            if idx == row_idx:
+                file_name = img
+            new_table_data.append([file_name, file_size, file_extension])
+        new_table = pd.DataFrame(new_table_data, columns=TABLE_HEAD)
+        self.table = new_table
+        # History Table
+        if self.historyview.model():
+            # Замена в существующей таблице
+            col_idx = self.history_table.columns[1]
+            old_obj = self.history_table[col_idx].to_list()[row_idx]
+            self.history_table[col_idx] = self.history_table[col_idx].replace(old_obj, angel)
+
+            table_model = TabelModel(self.history_table)
+            self.historyview.setModel(table_model)
+        else:
+            # Создание новой таблицы
+            pass
+
+        self.highlighted_img(self.tableview.currentIndex())
+        if self.uploaded_state:
+            idx = self.tableview.currentIndex()  # Только один объект всегда
+            img_name = self.table.iloc[idx.row(), 0]
+            self.display_img(img_name)
+                   
     def display_img(self, img_path: str) -> None:
         """ Отображение картинки в окне"""
         if type(img_path) == str:
@@ -286,6 +343,7 @@ class MainWindow(QtWidgets.QMainWindow):
             else:
                 path = img_name
             self.display_img(path)
+        self.highlighted_img_idx = idx
 
     def scale_img(self, way: bool) -> None:
         """ Изменение размера картинки """
@@ -325,25 +383,35 @@ class MainWindow(QtWidgets.QMainWindow):
         """ Вычисление угла. Разметка изображений. Обновление таблицы."""
         if self.uploaded_state:
             # Файл
-            algorithm = EvaluatingAlg(self.import_way, self.lines_width, self.beam_length, self.angel_type, True)
+            algorithm = EvaluatingAlg(self.import_way, self.lines_width, self.beam_length, self.angel_type, True, self)
         else:
             # Папка
-            algorithm = EvaluatingAlg(self.import_way, self.lines_width, self.beam_length, self.angel_type, False)
+            algorithm = EvaluatingAlg(self.import_way, self.lines_width, self.beam_length, self.angel_type, False, self)
         
         position = algorithm.find_rect(pred_img_mask)
         permissions = [self.show_square, self.show_circle, self.show_angel, self.show_data]
         
         solution = list()
         grided_imgs = dict()
+        math_error = list()
         for path, rect in position:
             file_name = os.path.basename(path)
-            angel, center, k, r = algorithm.calc(rect)
-            img = algorithm.draw(path, permissions, k, rect, r, center, angel)
-            solution.append((file_name, angel))
-            grided_imgs[file_name] = img
+            result = algorithm.calc(rect)
+            if result:
+                angel, center, k, r = result
+                img = algorithm.draw(path, permissions, k, rect, r, center, angel)
+                solution.append((file_name, angel))
+                grided_imgs[file_name] = img
+            else:
+                math_error.append(file_name)
+                solution.append((file_name, "!MATH_ERROR!"))
+        # Вывод ошибки
+        if len(math_error):
+            RaiseMathError(self, math_error)
         # Таблица
         table = pd.DataFrame(solution, columns=["Имя файла", f"Угол ({self.angel_type.lower()})"])
-        table_model = TabelModel(table)
+        self.history_table = table
+        table_model = TabelModel(self.history_table)
         self.historyview.setModel(table_model)
         # Растягиваем таблицу по размеру окна
         self.historyview.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
@@ -354,15 +422,16 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.uploaded_state:
             idx = self.tableview.currentIndex()  # Только один объект всегда
             img_name = self.table.iloc[idx.row(), 0]
-            self.display_img(img_name)
+            self.display_img(img_name)            
 
     def temp_replace(self, new_names: dict):
         """ Вспомогательная функция таблицы. Для обработанных изображений. """
         new_table_data = list()
-        for _, row in self._original_table.iterrows():
+        for row_idx, row in self._original_table.iterrows():
             file_name, file_size, file_extension = row.tolist()
             if type(file_name) == str:
-                new_table_data.append([new_names[file_name], file_size, file_extension])           
+                if file_name in new_names.keys():
+                    new_table_data.append([new_names[file_name], file_size, file_extension])
         new_table = pd.DataFrame(new_table_data, columns=TABLE_HEAD)
         self.table = new_table
         # self._table_model.replace(new_table)
@@ -386,6 +455,11 @@ class TabelModel(QtCore.QAbstractTableModel):
         if role == QtCore.Qt.ItemDataRole.DisplayRole:  # DisplayRole - ключевые данные, которые будут отображаться в виде текста.
             cell_value = self._table.iloc[idx.row(), idx.column()]
             return str(cell_value)
+        # Красим ошибки
+        if idx.isValid():
+             if role == QtCore.Qt.ItemDataRole.ForegroundRole:
+                if idx.data() == "!MATH_ERROR!":
+                    return QtGui.QBrush(QtGui.QColor("#FF6347"))
 
     def rowCount(self, idx: QtCore.QModelIndex) -> int:
         # Возвращает количество строк в таблице
